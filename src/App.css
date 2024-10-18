@@ -1,0 +1,71 @@
+.App {
+  font-family: Arial, sans-serif;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.App-header {
+  background-color: #282c34;
+  padding: 20px;
+  color: white;
+  text-align: center;
+}
+
+.App-header nav {
+  margin-top: 10px;
+}
+
+.App-header button {
+  margin: 0 10px;
+  padding: 5px 10px;
+}
+
+.App-main {
+  margin-top: 20px;
+}
+
+.task-list, .leaderboard, .user-stats, .add-task-form {
+  margin-bottom: 20px;
+}
+
+.task {
+  padding: 10px;
+  border: 1px solid #ddd;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.task.completed {
+  background-color: #e8f5e9;
+}
+
+.add-task-form input {
+  padding: 5px;
+  margin-right: 10px;
+}
+
+.verify-task-btn {
+  padding: 5px 10px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+th {
+  background-color: #f2f2f2;
+}

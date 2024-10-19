@@ -177,20 +177,21 @@ const GroupPage = () => {
     </header>
      
     <LeaderBoard groupId={group.id} />
-        <h1>Tasks for {group.name}</h1>
+        <h1>Group {group.name} Tasks</h1>
         <h2>{username}</h2>
      
       {/* <AddTaskForm groupId={group.id} /> */}
       
-      <div className="member-tasks" style={{ display: 'flex', justifyContent: 'space-between' }}>
+      <div className="member-tasks">
         {members.map(member => (
-          <div key={member.id} className="member" style={{ flex: '1', margin: '0 10px' }}>
+          <div key={member.id} className="member">
             <h3>{member.username}</h3>
             <ul>
               {tasks[member.id] && tasks[member.id].length > 0 ? (
                 tasks[member.id].map(task => (
-                  <li className='task-item' key={task.id}>
+                  <li className='task-card' key={task.id}>
                     {task.title}
+                    <div className='card-btns-container'>
                     {member.id === user.uid ? (
                       <>
                         <button className='primary-btn' onClick={() => handleEditTask(task.id, member.id)}>Edit</button>
@@ -204,6 +205,7 @@ const GroupPage = () => {
                         Verify
                       </button>
                     )}
+                    </div>
                   </li>
                 ))
               ) : (
@@ -211,14 +213,14 @@ const GroupPage = () => {
               )}
             </ul>
             {member.id === user.uid && (
-              <div>
+              <div className='add-task-form'>
                 <input
                   type="text"
                   value={newTask}
                   onChange={(e) => setNewTask(e.target.value)}
                   placeholder="Add a new task"
                 />
-                <button onClick={() => handleAddTask(member.id)}>Add Task</button>
+                <button className='primary-btn' onClick={() => handleAddTask(member.id)}>Add Task</button>
               </div>
             )}
           </div>

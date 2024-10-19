@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { auth } from '../firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { Link, useNavigate } from 'react-router-dom'; // Import Link and useNavigate
+import '../stylesheets/login.css';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -23,8 +24,10 @@ const Login = () => {
   };
 
   return (
-    <form onSubmit={handleLogin}>
-      <h2>Login</h2>
+    <form onSubmit={handleLogin} id='login-form'>
+      
+      <fieldset>
+      <legend><h2>Login</h2></legend>
       <input
         type="email"
         value={email}
@@ -39,11 +42,12 @@ const Login = () => {
         placeholder="Password"
         required
       />
-      <button type="submit">Login</button>
+      <button className='primary-btn' type="submit">Login</button>
       {error && <p style={{ color: 'red' }}>{error}</p>}
       <p>
         Don't have an account? <Link to="/signup">Sign Up</Link>
       </p>
+      </fieldset>
     </form>
   );
 };

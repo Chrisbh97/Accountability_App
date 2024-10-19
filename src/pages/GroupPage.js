@@ -7,6 +7,7 @@ import SignOutButton from '../components/SignOutButton'; // Import the SignOutBu
 import { auth } from '../firebase'; // Import your Firebase auth
 import { AuthContext } from '../contexts/AuthContext'; // Import AuthContext
 import { increment } from 'firebase/firestore';
+import '../stylesheets/grouppgage.css';
 
 const GroupPage = () => {
   const { groupId } = useParams(); // Get the groupId from the URL
@@ -17,7 +18,7 @@ const GroupPage = () => {
   const [members, setMembers] = useState([]); // State to hold group members
   const [tasks, setTasks] = useState({}); // State to hold tasks for each member
   const [newTask, setNewTask] = useState(''); // State for new task input
-
+//#region 
   useEffect(() => {
     const fetchGroupData = async () => {
       const db = getFirestore();
@@ -166,30 +167,21 @@ const GroupPage = () => {
   if (loading) {
     return <div>Loading...</div>;
   }
-
+//#endregion
   return (
     <div className="group-page">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <header>
+      <Link to="/" style={{ textDecoration: 'none' }}>Home</Link>
+    <SignOutButton />
+
+    </header>
+     
+    <LeaderBoard groupId={group.id} />
         <h1>Tasks for {group.name}</h1>
-        <div>{username}</div>
-      </div>
-      <SignOutButton />
-      <Link to="/" style={{ textDecoration: 'none' }}>
-        <button style={{
-          padding: '10px 20px',
-          fontSize: '16px',
-          backgroundColor: '#4CAF50',
-          color: 'white',
-          border: 'none',
-          borderRadius: '5px',
-          cursor: 'pointer',
-          marginBottom: '20px'
-        }}>
-          Home
-        </button>
-        </Link>
-      <AddTaskForm groupId={group.id} />
-      <LeaderBoard groupId={group.id} />
+        <h2>{username}</h2>
+     
+      {/* <AddTaskForm groupId={group.id} /> */}
+      
       <div className="member-tasks" style={{ display: 'flex', justifyContent: 'space-between' }}>
         {members.map(member => (
           <div key={member.id} className="member" style={{ flex: '1', margin: '0 10px' }}>
@@ -197,11 +189,11 @@ const GroupPage = () => {
             <ul>
               {tasks[member.id] && tasks[member.id].length > 0 ? (
                 tasks[member.id].map(task => (
-                  <li key={task.id}>
+                  <li className='task-item' key={task.id}>
                     {task.title}
                     {member.id === user.uid ? (
                       <>
-                        <button onClick={() => handleEditTask(task.id, member.id)}>Edit</button>
+                        <button className='primary-btn' onClick={() => handleEditTask(task.id, member.id)}>Edit</button>
                         <button onClick={() => handleDeleteTask(task.id, member.id)}>Delete</button>
                       </>
                     ) : (

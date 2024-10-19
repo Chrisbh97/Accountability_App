@@ -1,5 +1,5 @@
 import React from 'react';
-import './App.css';
+import './stylesheets/App.css';
 import { AuthProvider } from './contexts/AuthContext';
 import Home from './pages/Home';
 import GroupPage from './pages/GroupPage'; // Import the GroupPage component

@@ -4,7 +4,7 @@ import { getFirestore, collection, getDocs, doc, getDoc, query, where, documentI
 import GroupList from '../components/GroupList'; // Ensure this import is correct
 import SignOutButton from '../components/SignOutButton'; // Import the SignOutButton
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
-
+import '../stylesheets/home.css';
 const Home = () => {
   const { user, username } = useContext(AuthContext);
   const [groups, setGroups] = useState([]); // State to hold user groups
@@ -44,11 +44,11 @@ const Home = () => {
 
   return (
     <div className="home">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}></div>
-        <h1>Your Groups</h1>
-        <div>{username}</div>
+        <h1>{username}</h1>
+        <p>Your groups</p>
+        <GroupList groups={groups} onGroupClick={handleGroupClick} /> {/* Pass the handleGroupClick function */}
+
       <SignOutButton /> {/* Add the Sign Out button here */}
-      <GroupList groups={groups} onGroupClick={handleGroupClick} /> {/* Pass the handleGroupClick function */}
     </div>
   );
 };

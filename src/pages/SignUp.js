@@ -38,8 +38,10 @@ const SignUp = () => {
   };
 
   return (
-    <form onSubmit={handleSignUp}>
-      <h2>Sign Up</h2>
+    <form onSubmit={handleSignUp} id='login-form'>
+      
+      <fieldset className={error? "error": ""}>
+      <legend><h2>Sign Up</h2></legend>
       <input
         type="text"
         value={username}
@@ -61,8 +63,10 @@ const SignUp = () => {
         placeholder="Password"
         required
       />
-      <button type="submit">Sign Up</button>
+      <button type="submit" className='primary-btn'>Sign Up</button>
+      <p><a href="/login">Already have an account? Log in</a></p>
       {error && <p style={{ color: 'red' }}>{error}</p>}
+      </fieldset>
     </form>
   );
 };

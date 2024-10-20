@@ -1,6 +1,6 @@
 import React from 'react';
 import { useFirestore } from '../hooks/useFirestore';
-
+import '../stylesheets/leaderboard.css';
 const LeaderBoard = ({ groupId }) => {
   const { documents: users } = useFirestore('users');
 

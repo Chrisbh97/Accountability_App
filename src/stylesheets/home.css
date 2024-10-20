@@ -7,3 +7,30 @@
     align-items: center;
     font-family: auto;
 }
+
+.card{
+    border: 1px solid #b1c2fa;
+    border-radius: 10px;
+    padding: 10px;
+    width: 100%;
+    max-width: 300px;
+    ;
+}
+.card p{
+    font-size: 1em;
+    padding: 5px;
+}
+.clickable{
+    cursor: pointer;
+    background-color: #f9f9f9;
+
+}
+.clickable:hover{
+    background-color: #f1f1f1;
+}
+.username{
+    font-size: 2.5em;
+    padding: 5px;
+    text-transform: capitalize;
+    font-weight: bold;
+}

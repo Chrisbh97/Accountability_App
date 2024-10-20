@@ -14,9 +14,7 @@ header{
     text-transform: capitalize;
     border-bottom: 1px solid #e0e0e0;
 }
-.leaderboard{
-    width: 100%;
-}
+
 .task-card{
     display: flex;
     justify-content: space-between;
@@ -76,4 +74,44 @@ header{
     padding: 8px;
     border-radius: 7px;
     font-size: .7em;
+}
+
+.side-menu{
+    display: flex;
+    flex-direction: column;
+    
+    padding: 10px;
+    width: 80%;
+    max-width: 400px;
+    height: 90vh;
+    border-right: 1px solid #e0e0e0;
+    backdrop-filter: blur(10px);
+    position: absolute;
+    top: 10vh;
+    right: 0;
+    box-sizing: border-box;
+    box-shadow: 0 0 10px rgba(0, 0, 0, .1);
+    transition: 200ms;
+}
+.side-menu.closed{
+    transform: translateX(100%);
+}
+.side-menu:not(.closed){
+    transform: translateX(0);
+}
+.side-menu button{
+    padding: 8px;
+    border-radius: 7px;
+    font-size: .7em;
+    margin: 8px 0;
+    cursor: pointer;
+    position: absolute;
+    transform: translateX(-100%);
+    left: -20px;
+    background-color: aquamarine;
+    border: none;
+    
+}
+.side-menu-btn-container{
+    position: relative;
 }

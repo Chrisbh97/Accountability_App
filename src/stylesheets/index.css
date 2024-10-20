@@ -10,6 +10,7 @@ body{
     font-family: auto;
     /* background-image: url('/public/challenge.jpg');
     backdrop-filter: brightness(0.5); */
+    overflow-x: hidden;
 
 }
 #root{

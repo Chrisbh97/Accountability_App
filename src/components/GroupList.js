@@ -5,9 +5,9 @@ const GroupList = ({ groups, onGroupClick }) => {
     <div>
       {groups.length > 0 ? (
         groups.map(group => (
-          <div key={group.id} onClick={() => onGroupClick(group.id)} style={{ cursor: 'pointer' }}>
+          <p className="clickable" key={group.id} onClick={() => onGroupClick(group.id)}>
             {group.name}
-          </div>
+          </p>
         ))
       ) : (
         <p>No groups available.</p>

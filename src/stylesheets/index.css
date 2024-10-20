@@ -1,0 +1,25 @@
+@font-face {
+    font-family: 'theFont';
+    src: url('/public/fonts/thelak.otf');
+}
+body{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-size: 20px;
+    font-family: auto;
+    /* background-image: url('/public/challenge.jpg');
+    backdrop-filter: brightness(0.5); */
+    overflow-x: hidden;
+
+}
+#root{
+    
+    
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100dvh;
+    margin: 0;
+    padding: 0;
+}

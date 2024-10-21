@@ -14,6 +14,7 @@ import GroupList from "../components/GroupList"; // Ensure this import is correc
 import SignOutButton from "../components/SignOutButton"; // Import the SignOutButton
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 import "../stylesheets/home.css";
+import CreateGroupButton from "../components/CreateGroupButton";
 const Home = () => {
   const { user, username } = useContext(AuthContext);
   const [groups, setGroups] = useState([]); // State to hold user groups
@@ -61,10 +62,19 @@ const Home = () => {
     <div className="home">
       <div className="card">
         <h1 className="username">{username}</h1>
-        <p>Your groups</p>
         <hr />
-        <GroupList groups={groups} onGroupClick={handleGroupClick} />{" "}
+        <fieldset
+          style={{
+            margin: "10px 0",
+            borderRadius: "10px",
+            boxShadow: "inset rgb(143, 143, 245) 0px 0px 10px",
+          }}
+        >
+          <legend>Your groups</legend>
+          <GroupList groups={groups} onGroupClick={handleGroupClick} />{" "}
+        </fieldset>
         {/* Pass the handleGroupClick function */}
+        <CreateGroupButton />
         <SignOutButton /> {/* Add the Sign Out button here */}
       </div>
     </div>

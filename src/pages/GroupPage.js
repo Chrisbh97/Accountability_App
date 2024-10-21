@@ -58,6 +58,7 @@ const GroupPage = () => {
                   console.log("Error getting document:", error);
                 });
             });
+            // Fetch tasks for each member
             await Promise.all(membersData)
               .then(async (data) => {
                 setMembers(data);

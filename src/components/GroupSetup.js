@@ -26,8 +26,8 @@ const GroupSetup = ({ onGroupJoined }) => {
       await updateDoc(userRef, {
         groupIds: arrayUnion(groupRef.id) // Use arrayUnion to add the new groupId
       });
-
-      onGroupJoined(); // Notify that a group has been created
+      alert('Group created successfully, Please reload the page to see the changes');
+      // onGroupJoined(); // Notify that a group has been created
     } catch (error) {
       console.error("Error creating group: ", error);
     }
@@ -52,29 +52,29 @@ const GroupSetup = ({ onGroupJoined }) => {
 
       onGroupJoined(); // Notify that a group has been joined
     } catch (error) {
-      console.error("Error joining group: ", error);
+      alert("Error joining group: ", error);
     }
   };
 
   return (
     <div className="group-setup">
-      <h2>Create a New Group</h2>
+      <h3>Create a New Group</h3>
       <input 
         type="text" 
         value={groupName} 
         onChange={(e) => setGroupName(e.target.value)} 
         placeholder="Enter group name" 
       />
-      <button onClick={createGroup}>Create Group</button>
+      <button onClick={createGroup} className='primary-btn'>Create Group</button>
 
-      <h2>Join an Existing Group</h2>
+      <h3>Join an Existing Group</h3>
       <input 
         type="text" 
         value={joinCode} 
         onChange={(e) => setJoinCode(e.target.value)} // Handle join code input
         placeholder="Enter join code"
       />
-      <button onClick={joinGroup}>Join Group</button>
+      <button onClick={joinGroup} className='primary-btn'>Join Group</button>
     </div>
   );
 };

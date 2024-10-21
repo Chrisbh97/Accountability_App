@@ -14,7 +14,9 @@
     padding: 10px;
     width: 100%;
     max-width: 300px;
-    ;
+    display: flex;
+    flex-direction: column;
+    
 }
 .card p{
     font-size: 1em;

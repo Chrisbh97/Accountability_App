@@ -5,9 +5,9 @@ const CreateGroupButton = ({ onClick }) => {
     <button onClick={onClick} style={{
       padding: '10px 20px',
       fontSize: '16px',
-      backgroundColor: '#4CAF50',
-      color: 'white',
-      border: 'none',
+      backgroundColor: 'transparent',
+      color: 'rgb(143, 143, 245)',
+      border: '1px solid',
       borderRadius: '5px',
       cursor: 'pointer',
       marginBottom: '20px'

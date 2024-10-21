@@ -58,7 +58,7 @@ const GroupSetup = ({ onGroupJoined }) => {
 
   return (
     <div className="group-setup">
-      <h3>Create a New Group</h3>
+      <h3>Create a new group</h3>
       <input 
         type="text" 
         value={groupName} 
@@ -67,7 +67,7 @@ const GroupSetup = ({ onGroupJoined }) => {
       />
       <button onClick={createGroup} className='primary-btn'>Create Group</button>
 
-      <h3>Join an Existing Group</h3>
+      <h3>Join</h3>
       <input 
         type="text" 
         value={joinCode} 

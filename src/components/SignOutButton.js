@@ -5,16 +5,6 @@ import { useNavigate } from "react-router-dom";
 
 const SignOutButton = () => {
   const navigate = useNavigate();
-  const btnStyle = {
-    padding: "10px 20px",
-    fontSize: "16px",
-    backgroundColor: "#f44336",
-    color: "white",
-    border: "none",
-    borderRadius: "5px",
-    cursor: "pointer",
-  };
-
   const handleSignOut = async () => {
     try {
       await signOut(auth);
@@ -26,7 +16,7 @@ const SignOutButton = () => {
   };
 
   return (
-    <button onClick={handleSignOut} style={btnStyle}>
+    <button onClick={handleSignOut} className="signout-btn">
       Sign Out
     </button>
   );

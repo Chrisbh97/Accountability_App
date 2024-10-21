@@ -4,8 +4,12 @@
     display: flex;
     justify-content: center;
     flex-direction: column;
-    align-items: center;
-    font-family: auto;
+    align-items: flex-start;
+    
+    
+}
+.home .card{
+    height: 98%;
 }
 
 .card{
@@ -13,9 +17,11 @@
     border-radius: 10px;
     padding: 10px;
     width: 100%;
-    max-width: 300px;
+    max-width: 350px;
     display: flex;
     flex-direction: column;
+    color: wheat;
+    justify-content: space-between;
     
 }
 .card p{
@@ -24,11 +30,11 @@
 }
 .clickable{
     cursor: pointer;
-    background-color: #f9f9f9;
+    background-color: #282c34;
 
 }
 .clickable:hover{
-    background-color: #f1f1f1;
+    background-color: rgb(79, 89, 124);
 }
 .username{
     font-size: 2.5em;
@@ -49,7 +55,10 @@
     padding: 8px;
     margin: 8px 0;
     border-radius: 7px;
-    font-size: .7em;
+    font-size: .8em;
+    border: 1px solid #b1c2fa;
+    background-color: transparent;
+    color: wheat;
 
 }
 .group-setup button{

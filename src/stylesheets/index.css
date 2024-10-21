@@ -1,13 +1,13 @@
 @font-face {
-    font-family: 'theFont';
-    src: url('/public/fonts/thelak.otf');
+    font-family: 'CANDARA';
+    src: url('/public/fonts/CANDARA.TTF');
 }
 body{
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     font-size: 20px;
-    font-family: auto;
+    font-family: 'CANDARA';
     /* background-image: url('/public/challenge.jpg');
     backdrop-filter: brightness(0.5); */
     overflow-x: hidden;
@@ -22,4 +22,15 @@ body{
     height: 100dvh;
     margin: 0;
     padding: 0;
+}
+
+::-webkit-scrollbar{
+    width: 10px;
+}
+::-webkit-scrollbar-track{
+    background-color: #282c3479;
+}
+::-webkit-scrollbar-thumb{
+    background-color: wheat;
+    border-radius: 10px;
 }

@@ -3,6 +3,8 @@
   width: 100%;
   
   height: 100%;
+  background-color: rgb(63, 63, 63);
+  overflow-y: scroll;
 }
 
 .App-header {
@@ -25,58 +27,31 @@
   margin-top: 20px;
 }
 
-.task-list, .leaderboard, .user-stats, .add-task-form {
-  margin-bottom: 20px;
-}
 
-.task {
-  padding: 10px;
-  border: 1px solid #ddd;
-  margin-bottom: 10px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.task.completed {
-  background-color: #e8f5e9;
-}
-
-.add-task-form input {
-  padding: 5px;
-  margin-right: 10px;
-}
-
-.verify-task-btn {
-  padding: 5px 10px;
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  cursor: pointer;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-th, td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: left;
-}
-
-th {
-  background-color: #f2f2f2;
-}
 
 .primary-btn {
   padding: 5px 10px;
-  background-color: #2196f3;
-  color: white;
+  background-color: transparent;
   border: none;
   cursor: pointer;
+  outline: 1px solid #007bff;
 }
 .primary-btn:hover {
-  background-color: #0b7dda;
+  color: #007bff;
+}
+.signout-btn {
+  border-radius: 7px;
+  padding: 10px 20px;
+  cursor: pointer;
+  background-color: transparent;
+  border: none;
+  font-size: 1em;
+  outline: 1px solid #f44336;
+}
+.signout-btn:hover {
+  color: #f44336;
+}
+input, p, h1, h2, h3, h4, h5, h6, button, a {
+  font-family: inherit;
+  color: wheat;
 }

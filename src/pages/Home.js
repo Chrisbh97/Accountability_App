@@ -14,7 +14,6 @@ import GroupList from "../components/GroupList"; // Ensure this import is correc
 import SignOutButton from "../components/SignOutButton"; // Import the SignOutButton
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 import "../stylesheets/home.css";
-import CreateGroupButton from "../components/CreateGroupButton";
 import GroupSetup from "../components/GroupSetup";
 const Home = () => {
   const { user, username } = useContext(AuthContext);
@@ -63,7 +62,7 @@ const Home = () => {
     <div className="home">
       <div className="card">
         <h1 className="username">{username}</h1>
-        <hr />
+        <hr style={{width: '100%'}}/>
         <fieldset
           style={{
             margin: "10px 0",

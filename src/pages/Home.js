@@ -10,26 +10,39 @@ import {
   where,
   documentId,
 } from "firebase/firestore";
-import GroupList from "../components/GroupList"; // Ensure this import is correct
-import SignOutButton from "../components/SignOutButton"; // Import the SignOutButton
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import GroupList from "../components/GroupList"; 
+import SignOutButton from "../components/SignOutButton"; 
+import { useNavigate } from "react-router-dom"; 
 import "../stylesheets/home.css";
 import GroupSetup from "../components/GroupSetup";
+import { useCache } from "../contexts/CacheContext"; // Import the cache hook
+
 const Home = () => {
   const { user, username } = useContext(AuthContext);
-  const [groups, setGroups] = useState([]); // State to hold user groups
+  const [groups, setGroups] = useState([]); 
   const db = getFirestore();
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate(); 
+  const cache = useCache(); // Access cache
 
   useEffect(() => {
     const fetchUserGroups = async () => {
       if (user) {
+        // Check if groups are already cached for the current user
+        if (cache.groups && cache.userId === user.uid) { // Check if userId matches
+          console.log("Using cached groups for user:", user.uid);
+          setGroups(cache.groups);
+          return; // Early return to avoid further fetching
+        }
+
+        // Clear or reset cache for the new user
+        cache.groups = []; // Reset the cache for groups
+        cache.userId = user.uid; // Store the current user's ID
         console.log("Fetching user groups for user:", user.uid);
+        
         try {
-          // Fetch user document
-          const userRef = doc(db, "users", user.uid); // Get user document reference
-          const userDoc = await getDoc(userRef); // Fetch user document
-          const userData = userDoc.data(); // Get user data
+          const userRef = doc(db, "users", user.uid);
+          const userDoc = await getDoc(userRef);
+          const userData = userDoc.data();
 
           if (userData && userData.groupIds) {
             console.log("User groupIds:", userData.groupIds);
@@ -37,13 +50,17 @@ const Home = () => {
             const groupsQuery = query(
               groupsRef,
               where(documentId(), "in", userData.groupIds)
-            ); // Query groups by user groupIds
+            );
             const querySnapshot = await getDocs(groupsQuery);
             const groupsData = querySnapshot.docs.map((doc) => ({
               id: doc.id,
               ...doc.data(),
             }));
-            setGroups(groupsData);
+
+            // Cache the groups data and user ID
+            cache.groups = groupsData; // Cache the groups
+            cache.userId = user.uid; // Store the current user's ID
+            setGroups(groupsData); // Always set groups after fetching or caching
           }
         } catch (error) {
           console.error("Error fetching user groups:", error);
@@ -52,10 +69,10 @@ const Home = () => {
     };
 
     fetchUserGroups();
-  }, [user, db]);
+  }, [user, db, cache]); // Ensure cache is included in dependencies
 
   const handleGroupClick = (groupId) => {
-    navigate(`/group/${groupId}`); // Navigate to the group page
+    navigate(`/group/${groupId}`);
   };
 
   return (
@@ -71,11 +88,10 @@ const Home = () => {
           }}
         >
           <legend>Your groups</legend>
-          <GroupList groups={groups} onGroupClick={handleGroupClick} />{" "}
+          <GroupList groups={groups} onGroupClick={handleGroupClick} />
         </fieldset>
-        {/* Pass the handleGroupClick function */}
         <GroupSetup />
-        <SignOutButton /> {/* Add the Sign Out button here */}
+        <SignOutButton /> 
       </div>
     </div>
   );

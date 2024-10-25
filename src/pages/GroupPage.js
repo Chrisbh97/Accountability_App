@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useContext } from "react";
-import { useParams, Link } from "react-router-dom"; // Import Link for navigation
+import React, { useEffect, useState, useContext,useMemo, useCallback  } from "react";
+import { useParams, Link } from "react-router-dom";
 import {
   getFirestore,
   doc,
@@ -12,234 +12,316 @@ import {
   updateDoc,
   deleteDoc,
   increment,
+  onSnapshot,
 } from "firebase/firestore";
 import LeaderBoard from "../components/LeaderBoard";
-import SignOutButton from "../components/SignOutButton"; // Import the SignOutButton
-import { AuthContext } from "../contexts/AuthContext"; // Import AuthContext
+import SignOutButton from "../components/SignOutButton";
+import { AuthContext } from "../contexts/AuthContext";
 import "../stylesheets/grouppgage.css";
+import { useCache } from "../contexts/CacheContext";
 
 const GroupPage = () => {
-  const { groupId } = useParams(); // Get the groupId from the URL
-  const { user, username } = useContext(AuthContext); // Get username from context
+  const { groupId } = useParams();
+  const { user } = useContext(AuthContext);
   const [group, setGroup] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [members, setMembers] = useState([]); // State to hold group members
-  const [tasks, setTasks] = useState({}); // State to hold tasks for each member
-  const [newTask, setNewTask] = useState(""); // State for new task input
-  //#region
-  useEffect(() => {
-    const fetchData = async () => {
-      const db = getFirestore();
-      const groupRef = doc(db, "groups", groupId);
-      const tasksData = {};
+  const [members, setMembers] = useState([]);
+  const [tasks, setTasks] = useState({});
+  const [newTask, setNewTask] = useState("");
+  const cache = useCache();
 
-      await getDoc(groupRef)
-        .then(async (response) => {
-          if (response.exists()) {
-            setGroup({ id: response.id, ...response.data() });
-            const membersMap = response.data().members || {}; // Assuming members is a map
-            const memberIds = Object.keys(membersMap); // Get the keys (user IDs)
-            const membersData = await memberIds.map(async (memberId) => {
-              const userRef = doc(db, "users", memberId);
-              return await getDoc(userRef)
-                .then((response) => {
-                  if (response.exists()) {
-                    return {
-                      id: response.id,
-                      username: response.data().username,
-                      ...response.data(),
-                    };
-                  } else {
-                    console.log("No data");
-                    return null;
-                  }
-                })
-                .catch((error) => {
-                  console.log("Error getting document:", error);
-                });
-            });
-            // Fetch tasks for each member
-            await Promise.all(membersData)
-              .then(async (data) => {
-                setMembers(data);
-                for (const member of data) {
-                  const tasksRef = collection(db, "tasks");
-                  const q = query(
-                    tasksRef,
-                    where("userId", "==", member.id),
-                    where("groupId", "==", groupId)
-                  );
-                  const querySnapshot = await getDocs(q).then((response) => {
-                    return response;
-                  });
-                  tasksData[member.id] = querySnapshot.docs.map((doc) => ({
-                    id: doc.id,
-                    ...doc.data(),
-                  }));
-                }
-                setTasks(tasksData);
-              })
-              .catch((error) => {
-                console.error("Error fetching tasks:", error);
-              });
-            setLoading(false);
+  useEffect(() => {
+    const db = getFirestore();
+    const groupRef = doc(db, "groups", groupId);
+
+    const fetchGroupData = async () => {
+      try {
+        // Fetch group data
+        if (!cache.group) {
+          const groupSnap = await getDoc(groupRef);
+          if (groupSnap.exists()) {
+            const groupData = { id: groupSnap.id, ...groupSnap.data() };
+            cache.group = groupData;
+            setGroup(groupData);
           } else {
-            console.log("No such document!");
+            throw new Error("Group does not exist");
           }
-        })
-        .catch((error) => {
-          console.log("Error getting document:", error);
+        } else {
+          setGroup(cache.group);
+        }
+
+        // Fetch members data
+        const memberIds = Object.keys(cache.group?.members || {});
+        const membersData = await Promise.all(
+          memberIds.map(async (memberId) => {
+            if (!cache.members[memberId]) {
+              const userSnap = await getDoc(doc(db, "users", memberId));
+              if (userSnap.exists()) {
+                const memberData = { id: userSnap.id, ...userSnap.data() };
+                cache.members[memberId] = memberData;
+                return memberData;
+              }
+            } else {
+              return cache.members[memberId];
+            }
+            return null;
+          })
+        );
+        const sortedMembers = membersData.sort((a, b) => {
+          if (a.id === user.uid) return -1; // Current user first
+          if (b.id === user.uid) return 1;
+      // Safeguard against undefined joinedAt
+          const aJoinedAt = a.joinedAt ? a.joinedAt.toMillis() : Infinity; // Assign Infinity if undefined
+          const bJoinedAt = b.joinedAt ? b.joinedAt.toMillis() : Infinity; // Assign Infinity if undefined
+
+          return aJoinedAt - bJoinedAt; // Sort by joinedAt timestamp// Sort by joinedAt timestamp
         });
+    
+        setMembers(sortedMembers);
+
+        // setMembers(membersData.filter((m) => m));
+
+        // Fetch tasks for each member
+        const tasksData = {};
+        await Promise.all(
+          membersData.map(async (member) => {
+            const cacheKey = `${member.id}_${groupId}`;
+            if (!cache.tasks[cacheKey]) {
+              console.log("Fetching and caching tasks for user:", member.id);
+              const tasksRef = collection(db, "tasks");
+              const tasksQuery = query(
+                tasksRef,
+                where("userId", "==", member.id),
+                where("groupId", "==", groupId)
+              );
+              const tasksSnap = await getDocs(tasksQuery);
+              const memberTasks = tasksSnap.docs.map((taskDoc) => ({
+                id: taskDoc.id,
+                ...taskDoc.data(),
+              }));
+              cache.tasks[cacheKey] = memberTasks; // Cache tasks data
+              tasksData[member.id] = memberTasks;
+            } else {
+              console.log("Using cached tasks for user:", member.id);
+              tasksData[member.id] = cache.tasks[cacheKey]; // Use cached tasks
+            }
+          })
+        );
+        setTasks(tasksData);
+      } catch (error) {
+        console.error("Error fetching group data:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    fetchData();
-  }, []);
+    fetchGroupData();
+
+    // Real-time updates for group and tasks
+    const unsubscribeGroup = onSnapshot(groupRef, (groupSnap) => {
+      if (groupSnap.exists()) {
+        const groupData = { id: groupSnap.id, ...groupSnap.data() };
+        cache.group = groupData;
+        setGroup(groupData);
+      }
+    });
+
+    const unsubscribeTasks = onSnapshot(collection(db, "tasks"), () => {
+      fetchGroupData();
+    });
+
+    return () => {
+      unsubscribeGroup();
+      unsubscribeTasks();
+    };
+  }, [groupId, cache]);
 
   const handleAddTask = async (memberId) => {
-    if (newTask.trim() === "") return; // Prevent adding empty tasks
+    if (newTask.trim() === "") return;
     const db = getFirestore();
-    try {
-      const docRef = await addDoc(collection(db, "tasks"), {
-        title: newTask,
-        userId: memberId,
-        groupId: groupId,
-        createdAt: new Date(),
-      });
-      setNewTask(""); // Clear the input after adding
-      // Re-fetch tasks to update the list
-      const updatedTasks = { ...tasks };
-      updatedTasks[memberId] = [
-        ...(updatedTasks[memberId] || []),
-        { id: docRef.id, title: newTask },
-      ];
-      setTasks(updatedTasks);
-    } catch (error) {
-      console.error("Error adding task:", error);
-    }
-  };
+    const cacheKey = `${memberId}_${groupId}`;
 
+    try {
+        // Check for duplicates in local cache before adding
+        const isDuplicate = cache.tasks[cacheKey]?.some(task => task.title === newTask);
+        if (isDuplicate) {
+            alert("This task already exists.");
+            return;
+        }
+
+        // Add task to Firestore
+        const taskDoc = await addDoc(collection(db, "tasks"), {
+            title: newTask,
+            userId: memberId,
+            groupId,
+            createdAt: new Date(),
+        });
+
+        // Update cache
+        const newTaskData = { id: taskDoc.id, title: newTask };
+        if (!cache.tasks[cacheKey]) {
+            cache.tasks[cacheKey] = []; // Initialize if it doesn't exist
+        }
+        cache.tasks[cacheKey].push(newTaskData); // Add new task to cache
+
+        // Update state
+        // setTasks((prevTasks) => ({
+        //     ...prevTasks,
+        //     [memberId]: [
+        //         ...(prevTasks[memberId] || []), 
+        //         newTaskData,
+        //     ],
+        // }));
+
+        setNewTask("");
+    } catch (error) {
+        console.error("Error adding task:", error);
+    }
+};
+
+  
   const handleEditTask = async (taskId, memberId) => {
-    const taskToEdit = tasks[memberId].find((task) => task.id === taskId);
+    const taskToEdit = tasks[memberId]?.find((task) => task.id === taskId);
+    if (!taskToEdit) return;
     const updatedTitle = prompt("Edit task title:", taskToEdit.title);
     if (updatedTitle) {
       const db = getFirestore();
       await updateDoc(doc(db, "tasks", taskId), { title: updatedTitle });
-      const updatedTasks = { ...tasks };
-      updatedTasks[memberId] = updatedTasks[memberId].map((task) =>
+  
+      // Update cache for the specific task
+      const cacheKey = `${memberId}_${groupId}`; // Use cache key
+      cache.tasks[cacheKey] = cache.tasks[cacheKey].map((task) =>
         task.id === taskId ? { ...task, title: updatedTitle } : task
       );
-      setTasks(updatedTasks);
+  
+      // Update the state
+      // setTasks((prevTasks) => ({
+      //   ...prevTasks,
+      //   [memberId]: prevTasks[memberId].map((task) =>
+      //     task.id === taskId ? { ...task, title: updatedTitle } : task
+      //   ),
+      // }));
     }
   };
-
+  
   const handleDeleteTask = async (taskId, memberId) => {
     if (window.confirm("Are you sure you want to delete this task?")) {
       const db = getFirestore();
+      const cacheKey = `${memberId}_${groupId}`; // Use cache key
+  
+      // Ensure the cache exists for the member and group
+      if (!cache.tasks[cacheKey]) {
+        console.error("No tasks found in cache for member:", memberId);
+        return; // Exit if the cache doesn't exist
+      }
+  
       await deleteDoc(doc(db, "tasks", taskId));
-      const updatedTasks = { ...tasks };
-      updatedTasks[memberId] = updatedTasks[memberId].filter(
-        (task) => task.id !== taskId
-      );
-      setTasks(updatedTasks);
+  
+      // Remove the deleted task from the cache
+      cache.tasks[cacheKey] = cache.tasks[cacheKey].filter((task) => task.id !== taskId);
+  
+      // Update the state
+      setTasks((prevTasks) => ({
+        ...prevTasks,
+        [memberId]: prevTasks[memberId].filter((task) => task.id !== taskId),
+      }));
     }
   };
-
+  
   const handleVerifyTask = async (taskId, memberId) => {
     const db = getFirestore();
     const taskRef = doc(db, "tasks", taskId);
     const taskSnap = await getDoc(taskRef);
-
+  
     if (taskSnap.exists()) {
       const task = taskSnap.data();
-
-      // Check if the task is already completed
-      if (task.completed) {
-        alert("This task has already been verified.");
-        return; // Prevent further verification
-      }
-
-      if (user.uid === task.userId) return; // Prevent self-verification
-
+      if (user.uid === task.userId || task.completed) return;
+  
       try {
-        // Update task as completed and verified
         await updateDoc(taskRef, {
           completed: true,
           verifiedBy: user.uid,
           completedAt: new Date(),
         });
-
-        // Update points for the user whose task was verified
-        const userRef = doc(db, "users", task.userId);
-        const userSnap = await getDoc(userRef);
-
-        if (userSnap.exists()) {
-          const groupId = task.groupId; // Get the group ID from the task
-
-          // Update points in user document for the specific group
-          await updateDoc(userRef, {
-            totalPoints: increment(10), // Increment total points
-            [`groupPoints.${groupId}`]: increment(10), // Increment points for the specific group
-          });
-
-          // Update group points
-          const groupRef = doc(db, "groups", groupId);
-          await updateDoc(groupRef, {
-            [`members.${task.userId}.points`]: increment(10), // Increment points for the user in the group
-          });
-        }
+  
+        await updateDoc(doc(db, "users", task.userId), {
+          totalPoints: increment(10),
+          [`groupPoints.${groupId}`]: increment(10),
+        });
+  
+        await updateDoc(doc(db, "groups", groupId), {
+          [`members.${task.userId}.points`]: increment(10),
+        });
+  
+        // Update the cache for all tasks for the memberId and groupId
+        const updatedTasks = cache.tasks[task.userId][groupId].map((t) =>
+          t.id === taskId ? { ...t, completed: true, verifiedBy: user.uid } : t
+        );
+  
+        cache.tasks[task.userId][groupId] = updatedTasks; // Update the cache
+        setTasks((prevTasks) => ({
+          ...prevTasks,
+          [task.userId]: {
+            ...prevTasks[task.userId],
+            [groupId]: updatedTasks,
+          },
+        }));
       } catch (error) {
         console.error("Error verifying task:", error);
-        alert("Failed to verify task. Please try again.");
       }
     }
   };
+  
+  
+  
+
   const ToggleSideMenu = () => {
     const sidemenubtn = document.getElementById("side-menu-opener");
     const sidemenu = document.querySelector(".side-menu");
-
     sidemenu.classList.toggle("closed");
     sidemenubtn.innerHTML = sidemenu.classList.contains("closed")
       ? "LeaderBoard"
       : "Close";
   };
+
   if (loading) {
     return <div>Loading...</div>;
   }
-  //#endregion
+
   return (
     <div className="group-page">
-      <header>
-        <Link to="/" style={{ textDecoration: "none" }}>
-          Home
-        </Link>
-        <SignOutButton />
-      </header>
-      <div className="side-menu card closed">
-        <div className="side-menu-btn-container">
-          <button onClick={ToggleSideMenu} id="side-menu-opener">
-            Leaderboard
-          </button>
-        </div>
-        <LeaderBoard groupId={group.id} />
+    <header>
+      <Link to="/" style={{ textDecoration: "none" }}>
+        Home
+      </Link>
+      <SignOutButton />
+    </header>
+    <div className="side-menu card closed">
+      <div className="side-menu-btn-container">
+        <button onClick={ToggleSideMenu} id="side-menu-opener">
+          Leaderboard
+        </button>
       </div>
-      <h1>Group {group.name} Tasks</h1>
-      <div className="member-tasks">
-        {members.map((member) => (
-          <div key={member.id} className="member">
-            <h3 className="username">{member.username}</h3>
-            <ul>
-              {tasks[member.id] && tasks[member.id].length > 0 ? (
-                tasks[member.id].map((task) => (
-                  <li className="task-card" key={task.id}>
-                    <p>{task.title}</p>
-                    <div className="card-btns-container">
-                      {member.id === user.uid ? (
-                        <>
-                          <button
-                            className="primary-btn"
-                            onClick={() => handleEditTask(task.id, member.id)}
-                          >
-                            <svg
+      {group && <LeaderBoard groupId={group.id} />} {/* Ensure group is defined */}
+    </div>
+    <h1>{group ? `Group ${group.name} Tasks` : "Loading..."}</h1>
+    <div className="member-tasks">
+      {members.map((member) => (
+        <div key={member.id} className="member">
+          <h3 className="username">{member.username}</h3>
+          <ul>
+            {tasks[member.id] && tasks[member.id].length > 0 ? (
+              tasks[member.id].map((task) => (
+                <li className="task-card" key={task.id}>
+                  <p>{task.title}</p>
+                  <div className="card-btns-container">
+                    {member.id === user.uid ? (
+                      <>
+                        <button
+                          className="primary-btn"
+                          onClick={() => handleEditTask(task.id, member.id)}
+                        >
+                          <svg
                               xmlns="http://www.w3.org/2000/svg"
                               width="20"
                               height="20"
@@ -253,11 +335,9 @@ const GroupPage = () => {
                                 d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"
                               />
                             </svg>
-                          </button>
-                          <button
-                            onClick={() => handleDeleteTask(task.id, member.id)}
-                          >
-                            <svg
+                        </button>
+                        <button onClick={() => handleDeleteTask(task.id, member.id)}>
+                        <svg
                               xmlns="http://www.w3.org/2000/svg"
                               width="20"
                               height="20"
@@ -267,17 +347,11 @@ const GroupPage = () => {
                             >
                               <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5" />
                             </svg>
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          {/* <button
-                            onClick={() => handleVerifyTask(task.id, member.id)}
-                            disabled={task.completed} // Disable button if task is completed
-                          >
-                            Verify
-                          </button> */}
-                          <input
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                      <input
                             disabled={task.completed}
                             checked={task.completed}
                             type="checkbox"
@@ -286,35 +360,35 @@ const GroupPage = () => {
                             }
                           />
                         </>
-                      )}
-                    </div>
-                  </li>
-                ))
-              ) : (
-                <li>No tasks assigned</li>
-              )}
-            </ul>
-            {member.id === user.uid && (
-              <div className="add-task-form" id={member.id}>
-                <input
-                  type="text"
-                  value={newTask}
-                  onChange={(e) => setNewTask(e.target.value)}
-                  placeholder="Add a new task"
-                />
-                <button
-                  className="primary-btn"
-                  onClick={() => handleAddTask(member.id)}
-                >
-                  Add Task
-                </button>
-              </div>
+                    )}
+                  </div>
+                </li>
+              ))
+            ) : (
+              <p>No tasks assigned.</p>
             )}
+          </ul>
+          {member.id === user.uid && (
+            <div className="add-task-form" id={member.id}>
+            <input
+              type="text"
+              value={newTask}
+              onChange={(e) => setNewTask(e.target.value)}
+              placeholder="Add a new task"
+            />
+            <button
+              className="primary-btn"
+              onClick={() => handleAddTask(member.id)}
+            >
+              Add Task
+            </button>
           </div>
-        ))}
-      </div>
+          )}
+        </div>
+      ))}
     </div>
-  );
+  </div>
+);
 };
 
 export default GroupPage;
